@@ -96,18 +96,15 @@ for (Animal* a : animals)
 ## Beispielablauf
 
 ```cpp
-Animal animal(5, "Generic Animal");
 Dog dog(3, "Buddy");
 Cat cat(2, "Whiskers");
 
-std::vector<Animal*> animals = {&animal, &dog, &cat};
+std::vector<Animal*> animals = {&dog, &cat};
 printAnimalSounds(animals);
 ```
 
 Erwartete Ausgabe:
 ```
-...some generic animal sound...
-I am Generic Animal and I am 5 years old.
 Woof!
 I am Buddy and I am 3 years old.
 Meow!
