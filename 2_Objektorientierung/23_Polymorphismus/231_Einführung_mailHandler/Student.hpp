@@ -7,6 +7,7 @@ class Student : public Person
 {
 public:
     Student(std::string name, std::string address, std::string email);
+    std::string printSignature() override;
 private:
     double m_averageGrade;
 };

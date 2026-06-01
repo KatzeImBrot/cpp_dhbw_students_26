@@ -2,3 +2,7 @@
 
 Professor::Professor(std::string name, std::string address, std::string email)
     : Person(name, address, email) {}
+
+std::string Professor::printSignature() {
+    return "Mit freundlichen Gruessen, " + getName();
+}

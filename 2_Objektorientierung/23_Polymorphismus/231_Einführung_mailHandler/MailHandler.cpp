@@ -1,0 +1,12 @@
+#include "MailHandler.hpp"
+#include <iostream>
+
+void MailHandler::writeMail(Person& receiver, Person& sender, std::string mailText)
+{
+    std::cout << "--- Writing Mail to: " << receiver.getName() << std::endl;
+    std::cout << "From: " << sender.getName() << std::endl;
+    std::cout << "Text: " << std::endl;
+    std::cout << mailText << std::endl;
+    std::cout << "Signature: " << sender.printSignature() << std::endl;
+    std::cout << "---" << std::endl;
+}

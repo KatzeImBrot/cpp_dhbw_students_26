@@ -7,9 +7,10 @@ class Person
 {
 public:
     Person(std::string name, std::string address, std::string email);
-    ~Person();
-
+    virtual ~Person();
+    
     std::string getName();
+    virtual std::string printSignature();
 
 protected:
     std::string m_name;

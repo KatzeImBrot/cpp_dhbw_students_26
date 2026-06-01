@@ -8,6 +8,7 @@ class Professor : public Person
 {
 public:
     Professor(std::string name, std::string address, std::string email);
+    std::string printSignature() override;
 private:
     std::string m_iban;
 };

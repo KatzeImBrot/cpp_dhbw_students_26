@@ -42,7 +42,7 @@ classDiagram
 ## Anforderungen
 
 ### Klasse `Person`
-- Private/protected Member: `m_name`, `m_address`, `m_email` (alle `std::string`)
+- Protected Member: `m_name`, `m_address`, `m_email` (alle `std::string`)
 - Konstruktor mit `name`, `address`, `email`
 - Getter `getName()` – wird von `MailHandler` benötigt
 

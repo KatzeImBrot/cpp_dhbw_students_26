@@ -13,3 +13,7 @@ std::string Person::getName()
 {
     return m_name;
 }
+
+std::string Person::printSignature() {
+    return "Mfg, " + m_name;
+}
