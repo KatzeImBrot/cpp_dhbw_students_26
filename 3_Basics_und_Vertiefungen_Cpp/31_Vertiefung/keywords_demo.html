@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++ Keywords – const · constexpr · static · auto</title>
+<style>
+  :root{
+    --bg-primary:#ffffff;--bg-secondary:#f4f3ee;--bg-info:#e6f1fb;--bg-danger:#fcebeb;--bg-success:#e1f5ee;--bg-warn:#fbf0d9;
+    --text-primary:#1f1e1c;--text-secondary:#5f5e5a;--text-tertiary:#8a8881;
+    --text-info:#185fa5;--text-danger:#a32d2d;--text-success:#0f6e56;--text-warn:#8a5a00;
+    --border-tertiary:rgba(0,0,0,0.14);--border-secondary:rgba(0,0,0,0.28);--border-info:#378add;
+    --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-mono:ui-monospace,"Cascadia Code",Consolas,"Liberation Mono",monospace;
+    --r-md:8px;--r-lg:12px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg-primary:#262624;--bg-secondary:#30302d;--bg-info:#0c447c;--bg-danger:#501313;--bg-success:#085041;--bg-warn:#4a3410;
+      --text-primary:#f0efe9;--text-secondary:#b4b2a9;--text-tertiary:#888780;
+      --text-info:#85b7eb;--text-danger:#f09595;--text-success:#5dcaa5;--text-warn:#e0b964;
+      --border-tertiary:rgba(255,255,255,0.16);--border-secondary:rgba(255,255,255,0.3);--border-info:#378add;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:960px;padding:24px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6}
+  h1{font-size:21px;font-weight:600;margin:0 0 4px}
+  .sub{color:var(--text-secondary);font-size:14px;margin:0 0 18px}
+  button{font-family:inherit;font-size:14px;padding:6px 14px;cursor:pointer;background:var(--bg-primary);color:var(--text-primary);border:0.5px solid var(--border-secondary);border-radius:var(--r-md);transition:background .12s,transform .06s}
+  button:hover:not(:disabled){background:var(--bg-secondary)}
+  button:active:not(:disabled){transform:scale(0.98)}
+  button:disabled{opacity:0.4;cursor:default}
+  .seg{font-family:var(--font-mono);font-size:14px;padding:8px 16px}
+  .row{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r-md);font-family:var(--font-mono);font-size:13px;line-height:1.55}
+  .num{width:18px;text-align:right;color:var(--text-tertiary);flex:none}
+  .badge{font-size:11px;padding:1px 8px;border-radius:var(--r-md)}
+</style>
+</head>
+<body>
+  <h1>C++ Keywords Demo</h1>
+  <p class="sub">const &middot; constexpr &middot; static &middot; auto &ndash; Schritt f&uuml;r Schritt: Was l&auml;sst der Compiler zu, was verbietet er? &nbsp;<span style="color:var(--text-tertiary)">(Tasten: &larr; / &rarr; Schritte, 1&ndash;4 Keywords)</span></p>
+
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="seg" id="seg-const">1 &middot; const</button>
+    <button class="seg" id="seg-constexpr">2 &middot; constexpr</button>
+    <button class="seg" id="seg-static">3 &middot; static</button>
+    <button class="seg" id="seg-auto">4 &middot; auto</button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <button id="back">&larr; Zur&uuml;ck</button>
+    <span id="count" style="font-size:13px;color:var(--text-secondary);min-width:90px;text-align:center"></span>
+    <button id="next">Weiter &rarr;</button>
+  </div>
+  <div id="note" style="min-height:46px;font-size:14px;line-height:1.6;background:var(--bg-secondary);border-radius:var(--r-md);padding:10px 14px;margin-bottom:18px"></div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
+    <div style="flex:2 1 320px;min-width:0"><div style="font-size:12px;color:var(--text-tertiary);margin-bottom:6px">Programm</div><div id="code"></div></div>
+    <div style="flex:1 1 200px;min-width:0"><div style="font-size:12px;color:var(--text-tertiary);margin-bottom:6px">Wirkung</div><div id="effect"></div></div>
+  </div>
+  <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary)">
+    <span><span class="badge" style="background:var(--bg-success);color:var(--text-success)">&#10003; erlaubt</span></span>
+    <span><span class="badge" style="background:var(--bg-danger);color:var(--text-danger)">&#10007; Compiler-Fehler</span></span>
+    <span><span class="badge" style="background:var(--bg-info);color:var(--text-info)">&#8505; Info</span></span>
+    <span><span class="badge" style="background:var(--bg-warn);color:var(--text-warn)">&#9888; Vorsicht</span></span>
+  </div>
+
+<script>
+(function(){
+  var data={
+    "const":{code:[
+      "const int kMax = 100;       // Konstante",
+      "kMax = 200;                 // ?",
+      "int copy = kMax;            // ?",
+      "",
+      "class Sensor {",
+      "    int get() const {       // const-Methode",
+      "        return m_value;     // ?",
+      "        m_value = 0;        // ?",
+      "    }",
+      "    int m_value = 42;",
+      "};"
+    ],steps:[
+      {line:1,kind:"info",label:"Konstante",note:"const int: kMax ist ab jetzt unver\u00e4nderlich."},
+      {line:2,kind:"err",label:"Compiler-Fehler",note:"Einer const-Variable darf man nichts mehr zuweisen \u2013 das verbietet der Compiler."},
+      {line:3,kind:"ok",label:"erlaubt",note:"Lesen ist erlaubt: copy bekommt eine Kopie des Werts (100)."},
+      {line:6,kind:"info",label:"const-Methode",note:"Das nachgestellte const verspricht: Diese Methode ver\u00e4ndert das Objekt nicht."},
+      {line:7,kind:"ok",label:"erlaubt",note:"Member lesen ist in einer const-Methode erlaubt."},
+      {line:8,kind:"err",label:"Compiler-Fehler",note:"Eine const-Methode darf m_value nicht ver\u00e4ndern."}
+    ]},
+    "constexpr":{code:[
+      "constexpr int square(int n) {",
+      "    return n * n;",
+      "}",
+      "",
+      "constexpr int val = square(8);  // ?",
+      "int arr[val];                   // ?",
+      "",
+      "int y = square(eingabe);        // ?"
+    ],steps:[
+      {line:1,kind:"info",label:"Compile-Zeit",note:"Eine constexpr-Funktion kann bereits beim Kompilieren ausgewertet werden."},
+      {line:5,kind:"ok",label:"beim Kompilieren",note:"val wird schon beim Kompilieren berechnet: val = 64. Zur Laufzeit f\u00e4llt keine Rechnung an."},
+      {line:6,kind:"ok",label:"erlaubt",note:"val ist eine Compile-Zeit-Konstante \u2013 nur damit ist sie als Array-Gr\u00f6\u00dfe nutzbar."},
+      {line:8,kind:"info",label:"zur Laufzeit",note:"Hier wird zur Laufzeit gerechnet: 'eingabe' steht erst dann fest. constexpr l\u00e4sst auch das zu."}
+    ]},
+    "static":{code:[
+      "class Counter {",
+      "    Counter() { s_count++; }",
+      "    static int s_count;     // ?",
+      "};",
+      "int Counter::s_count = 0;",
+      "",
+      "Counter a;                  // ?",
+      "Counter b;                  // ?",
+      "Counter::s_count;           // ?"
+    ],steps:[
+      {line:3,kind:"info",label:"Klassenebene",note:"static: s_count geh\u00f6rt zur Klasse, nicht zum Objekt \u2013 existiert nur EINMAL und wird von allen Objekten geteilt."},
+      {line:7,kind:"ok",label:"s_count = 1",note:"a wird erzeugt \u2192 der gemeinsame Z\u00e4hler steigt auf 1."},
+      {line:8,kind:"ok",label:"s_count = 2",note:"b wird erzeugt \u2192 s_count = 2. a und b teilen sich denselben Wert."},
+      {line:9,kind:"ok",label:"erlaubt",note:"Zugriff ganz ohne Objekt m\u00f6glich (Klassenebene): Counter::s_count."}
+    ]},
+    "auto":{code:[
+      "auto i = 42;                     // ?",
+      "auto pi = 3.14;                  // ?",
+      "auto name = std::string(\"Tom\");  // ?",
+      "auto it = vec.begin();           // ?",
+      "auto x = berechne();             // ?"
+    ],steps:[
+      {line:1,kind:"ok",label:"\u2192 int",note:"Der Compiler leitet den Typ aus dem Wert ab: i ist int."},
+      {line:2,kind:"ok",label:"\u2192 double",note:"pi ist double \u2013 abgeleitet aus 3.14."},
+      {line:3,kind:"ok",label:"\u2192 std::string",note:"name ist std::string \u2013 der Typ steht rechts klar da."},
+      {line:4,kind:"ok",label:"\u2192 Iterator",note:"it ist der (lange) Iterator-Typ. Hier erh\u00f6ht auto die Lesbarkeit deutlich."},
+      {line:5,kind:"warn",label:"Vorsicht",note:"Der Typ ist beim Lesen nicht erkennbar \u2013 hier kann auto die Lesbarkeit verschlechtern (AAA mit Ma\u00df)."}
+    ]}
+  };
+  var seg="const",i=0;
+  var elCode=document.getElementById("code"),elEffect=document.getElementById("effect"),elNote=document.getElementById("note"),elCount=document.getElementById("count"),elBack=document.getElementById("back"),elNext=document.getElementById("next");
+  var segBtns={"const":document.getElementById("seg-const"),"constexpr":document.getElementById("seg-constexpr"),"static":document.getElementById("seg-static"),"auto":document.getElementById("seg-auto")};
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+  function kindColor(k){return k==="ok"?["var(--bg-success)","var(--text-success)","\u2713"]:k==="err"?["var(--bg-danger)","var(--text-danger)","\u2717"]:k==="warn"?["var(--bg-warn)","var(--text-warn)","\u26a0"]:["var(--bg-info)","var(--text-info)","\u2139"];}
+  function activeStyle(on){return on?"border:2px solid var(--border-info);background:var(--bg-info);color:var(--text-info);":"";}
+  function render(){
+    var d=data[seg],s=d.steps[i];
+    for(var k in segBtns){segBtns[k].setAttribute("style",activeStyle(seg===k)+"font-family:var(--font-mono);font-size:14px;padding:8px 16px");}
+    elNote.textContent=s.note;
+    elCount.textContent="Schritt "+(i+1)+" / "+d.steps.length;
+    elBack.disabled=(i===0);elNext.disabled=(i===d.steps.length-1);
+    var ch="";
+    for(var l=0;l<d.code.length;l++){
+      var cur=(l+1===s.line);
+      ch+='<div class="row" style="'+(cur?"background:var(--bg-info);":"")+'"><span class="num">'+(l+1)+'</span><span style="'+(cur?"color:var(--text-info);":"color:var(--text-primary);")+'white-space:pre">'+esc(d.code[l])+'</span></div>';
+    }
+    elCode.innerHTML=ch;
+    var c=kindColor(s.kind);
+    elEffect.innerHTML='<div style="background:'+c[0]+';border:2px solid '+c[1]+';border-radius:var(--r-lg);padding:16px;text-align:center"><div style="font-size:30px;line-height:1;color:'+c[1]+'">'+c[2]+'</div><div style="margin-top:8px;font-family:var(--font-mono);font-size:14px;font-weight:600;color:'+c[1]+'">'+s.label+'</div></div>';
+  }
+  function setSeg(x){seg=x;i=0;render();}
+  segBtns["const"].onclick=function(){setSeg("const");};
+  segBtns["constexpr"].onclick=function(){setSeg("constexpr");};
+  segBtns["static"].onclick=function(){setSeg("static");};
+  segBtns["auto"].onclick=function(){setSeg("auto");};
+  elBack.onclick=function(){if(i>0){i--;render();}};
+  elNext.onclick=function(){if(i<data[seg].steps.length-1){i++;render();}};
+  document.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight"){elNext.click();}
+    else if(e.key==="ArrowLeft"){elBack.click();}
+    else if(e.key==="1"){setSeg("const");}
+    else if(e.key==="2"){setSeg("constexpr");}
+    else if(e.key==="3"){setSeg("static");}
+    else if(e.key==="4"){setSeg("auto");}
+  });
+  render();
+})();
+</script>
+</body>
+</html>

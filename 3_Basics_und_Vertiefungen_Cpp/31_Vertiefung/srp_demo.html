@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Single Responsibility Principle Demo</title>
+<style>
+  :root{
+    --bg-primary:#ffffff;--bg-secondary:#f4f3ee;--bg-info:#e6f1fb;--bg-danger:#fcebeb;--bg-success:#e1f5ee;--bg-warn:#fbf0d9;
+    --text-primary:#1f1e1c;--text-secondary:#5f5e5a;--text-tertiary:#8a8881;
+    --text-info:#185fa5;--text-danger:#a32d2d;--text-success:#0f6e56;--text-warn:#8a5a00;
+    --border-tertiary:rgba(0,0,0,0.14);--border-secondary:rgba(0,0,0,0.4);--border-info:#378add;
+    --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-mono:ui-monospace,"Cascadia Code",Consolas,"Liberation Mono",monospace;
+    --r-md:8px;--r-lg:12px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg-primary:#262624;--bg-secondary:#33332f;--bg-info:#0c447c;--bg-danger:#501313;--bg-success:#085041;--bg-warn:#4a3410;
+      --text-primary:#f0efe9;--text-secondary:#b4b2a9;--text-tertiary:#9b998f;
+      --text-info:#85b7eb;--text-danger:#f09595;--text-success:#5dcaa5;--text-warn:#e0b964;
+      --border-tertiary:rgba(255,255,255,0.16);--border-secondary:rgba(255,255,255,0.45);--border-info:#378add;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:900px;padding:24px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6}
+  h1{font-size:21px;font-weight:600;margin:0 0 4px}
+  .sub{color:var(--text-secondary);font-size:14px;margin:0 0 18px}
+  button{font-family:inherit;font-size:14px;padding:6px 14px;cursor:pointer;background:var(--bg-primary);color:var(--text-primary);border:0.5px solid var(--border-secondary);border-radius:var(--r-md);transition:background .12s,transform .06s}
+  button:hover:not(:disabled){background:var(--bg-secondary)}
+  button:active:not(:disabled){transform:scale(0.98)}
+  button:disabled{opacity:0.4;cursor:default}
+  .appcard{flex:1 1 200px;border-radius:var(--r-lg);padding:10px 14px;border:0.5px solid var(--border-tertiary)}
+  svg text{font-family:var(--font-sans)}
+</style>
+</head>
+<body>
+  <h1>Single Responsibility Principle Demo</h1>
+  <p class="sub">Jede Klasse sollte f&uuml;r genau einen Teil der Funktionalit&auml;t verantwortlich sein. Schalte die Architektur um und l&ouml;se dann eine GUI-&Auml;nderung aus &ndash; beobachte, wer betroffen ist.</p>
+
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button id="m-bad">Schlecht: Gott-Klasse</button>
+    <button id="m-good">Gut: SRP</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button id="act-change">&#9888; GUI &auml;ndern</button>
+    <button id="act-reset">Zur&uuml;cksetzen</button>
+  </div>
+
+  <div id="note" style="min-height:48px;font-size:14px;line-height:1.6;background:var(--bg-secondary);border-radius:var(--r-md);padding:10px 14px;margin-bottom:16px"></div>
+
+  <div style="border:0.5px solid var(--border-tertiary);border-radius:var(--r-lg);padding:8px;margin-bottom:16px">
+    <svg id="diagram" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block">
+      <defs>
+        <marker id="arrowN" markerWidth="11" markerHeight="11" refX="9" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,3 L0,6 z" style="fill:var(--text-tertiary)"/></marker>
+        <marker id="arrowD" markerWidth="11" markerHeight="11" refX="9" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,3 L0,6 z" style="fill:var(--text-danger)"/></marker>
+        <marker id="inh" markerWidth="16" markerHeight="16" refX="12" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 z" style="fill:var(--bg-primary);stroke:var(--text-tertiary);stroke-width:1.2"/></marker>
+      </defs>
+    </svg>
+  </div>
+
+  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:6px">App-Status</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div class="appcard" id="status-math"></div>
+    <div class="appcard" id="status-graph"></div>
+  </div>
+
+  <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary)">
+    <span><span style="background:var(--bg-warn);color:var(--text-warn);padding:1px 8px;border-radius:var(--r-md)">ge&auml;ndert</span></span>
+    <span><span style="background:var(--bg-danger);color:var(--text-danger);padding:1px 8px;border-radius:var(--r-md)">betroffen</span></span>
+    <span><span style="background:var(--bg-success);color:var(--text-success);padding:1px 8px;border-radius:var(--r-md)">sicher</span></span>
+  </div>
+
+<script>
+(function(){
+  var models={
+    bad:{
+      vb:"0 0 720 320",
+      nodes:[
+        {id:"Math",  title:"Math App",      x:20, y:45, w:150, h:60, methods:[]},
+        {id:"Rect",  title:"Rectangle",     x:270,y:30, w:180, h:95, methods:["area() : double","render() : void"], resp:"2 Verantwortungen", respKind:"warn"},
+        {id:"Graph", title:"Graphical App", x:550,y:45, w:150, h:60, methods:[]},
+        {id:"GUI",   title:"GUI",           x:295,y:240,w:130, h:55, methods:[]}
+      ],
+      edges:[
+        {from:"Math", to:"Rect", type:"uses", x1:170,y1:75, x2:268,y2:75, label:"verwendet"},
+        {from:"Graph",to:"Rect", type:"uses", x1:550,y1:75, x2:452,y2:75, label:"verwendet"},
+        {from:"Rect", to:"GUI",  type:"uses", x1:360,y1:125,x2:360,y2:238,label:"verwendet"},
+        {from:"Graph",to:"GUI",  type:"uses", x1:600,y1:105,x2:428,y2:268,label:""}
+      ]
+    },
+    good:{
+      vb:"0 0 740 440",
+      nodes:[
+        {id:"Math",  title:"Math App",           x:20, y:45, w:150, h:60, methods:[]},
+        {id:"Rect",  title:"Rectangle",          x:270,y:30, w:180, h:78, methods:["area() : double"], resp:"1 Verantwortung", respKind:"ok"},
+        {id:"GRect", title:"Graphical Rectangle",x:255,y:205,w:210, h:78, methods:["render() : void"], resp:"1 Verantwortung", respKind:"ok"},
+        {id:"Graph", title:"Graphical App",      x:560,y:210,w:150, h:60, methods:[]},
+        {id:"GUI",   title:"GUI",                x:295,y:355,w:140, h:55, methods:[]}
+      ],
+      edges:[
+        {from:"Math", to:"Rect",  type:"uses",     x1:170,y1:75, x2:268,y2:75, label:"verwendet"},
+        {from:"GRect",to:"Rect",  type:"inherits", x1:360,y1:205,x2:360,y2:110,label:"erbt von"},
+        {from:"Graph",to:"GRect", type:"uses",     x1:560,y1:240,x2:467,y2:240,label:"verwendet"},
+        {from:"GRect",to:"GUI",   type:"uses",     x1:360,y1:283,x2:360,y2:353,label:"verwendet"},
+        {from:"Graph",to:"GUI",   type:"uses",     x1:625,y1:270,x2:438,y2:380,label:""}
+      ]
+    }
+  };
+
+  var mode="bad", changed=false;
+  var svg=document.getElementById("diagram"),elNote=document.getElementById("note"),bBad=document.getElementById("m-bad"),bGood=document.getElementById("m-good"),aChange=document.getElementById("act-change"),aReset=document.getElementById("act-reset"),stMath=document.getElementById("status-math"),stGraph=document.getElementById("status-graph");
+
+  function affectedSet(m){
+    var adj={}; m.edges.forEach(function(e){(adj[e.from]=adj[e.from]||[]).push(e.to);});
+    function reaches(n,seen){ if(n==="GUI") return true; if(seen[n]) return false; seen[n]=1; var o=adj[n]||[]; for(var i=0;i<o.length;i++){ if(reaches(o[i],seen)) return true;} return false; }
+    var aff={}; m.nodes.forEach(function(nd){ if(nd.id!=="GUI" && reaches(nd.id,{})) aff[nd.id]=1; }); return aff;
+  }
+  function nodeCols(id,aff){
+    if(!changed) return ["var(--bg-secondary)","var(--border-secondary)","var(--text-primary)"];
+    if(id==="GUI") return ["var(--bg-warn)","var(--text-warn)","var(--text-warn)"];
+    if(aff[id])   return ["var(--bg-danger)","var(--text-danger)","var(--text-danger)"];
+    return ["var(--bg-success)","var(--text-success)","var(--text-success)"];
+  }
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+
+  function render(){
+    var m=models[mode], aff=changed?affectedSet(m):{};
+    bBad.setAttribute("style", mode==="bad" ?"border:2px solid var(--border-info);background:var(--bg-info);color:var(--text-info);":"");
+    bGood.setAttribute("style",mode==="good"?"border:2px solid var(--border-info);background:var(--bg-info);color:var(--text-info);":"");
+    svg.setAttribute("viewBox", m.vb);
+
+    var defs = svg.querySelector("defs").outerHTML;
+    var s = defs;
+
+    // Kanten zuerst
+    m.edges.forEach(function(e){
+      var tainted = changed && aff[e.from] && (aff[e.to] || e.to==="GUI");
+      var col = tainted ? "var(--text-danger)" : "var(--text-tertiary)";
+      var marker = e.type==="inherits" ? "inh" : (tainted ? "arrowD" : "arrowN");
+      s += '<line x1="'+e.x1+'" y1="'+e.y1+'" x2="'+e.x2+'" y2="'+e.y2+'" style="stroke:'+col+';stroke-width:'+(tainted?2:1.4)+'" marker-end="url(#'+marker+')"/>';
+      if(e.label){
+        var mx=(e.x1+e.x2)/2, my=(e.y1+e.y2)/2;
+        s += '<rect x="'+(mx-32)+'" y="'+(my-9)+'" width="64" height="17" style="fill:var(--bg-primary)"/>';
+        s += '<text x="'+mx+'" y="'+(my+3)+'" text-anchor="middle" style="fill:var(--text-tertiary);font-size:11px">'+e.label+'</text>';
+      }
+    });
+
+    // Knoten
+    m.nodes.forEach(function(n){
+      var c=nodeCols(n.id,aff), titleH=28;
+      s += '<rect x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="'+n.h+'" rx="3" style="fill:'+c[0]+';stroke:'+c[1]+';stroke-width:1.6"/>';
+      s += '<line x1="'+n.x+'" y1="'+(n.y+titleH)+'" x2="'+(n.x+n.w)+'" y2="'+(n.y+titleH)+'" style="stroke:'+c[1]+';stroke-width:1"/>';
+      s += '<text x="'+(n.x+n.w/2)+'" y="'+(n.y+18)+'" text-anchor="middle" style="fill:'+c[2]+';font-weight:600;font-size:13px">'+esc(n.title)+'</text>';
+      var my=n.y+titleH+18;
+      n.methods.forEach(function(mt){
+        s += '<text x="'+(n.x+12)+'" y="'+my+'" style="fill:'+c[2]+';font-size:12px;font-family:var(--font-mono)">'+esc(mt)+'</text>';
+        my+=18;
+      });
+      if(n.resp){
+        var rc = n.respKind==="ok" ? "var(--text-success)" : "var(--text-warn)";
+        var sym = n.respKind==="ok" ? "\u2713 " : "\u26a0 ";
+        s += '<text x="'+(n.x+n.w/2)+'" y="'+(n.y+n.h+16)+'" text-anchor="middle" style="fill:'+rc+';font-size:11.5px;font-weight:600">'+sym+n.resp+'</text>';
+      }
+    });
+    svg.innerHTML = s;
+
+    // Notiz
+    var notes={
+      "bad-false":"Gott-Klasse: Rectangle macht Mathe (area) UND Grafik (render) und h\u00e4ngt an der GUI. Die Math App nutzt Rectangle \u2013 und damit indirekt die GUI. Klick auf \u201eGUI \u00e4ndern\u201c.",
+      "bad-true":"Die GUI-\u00c4nderung pflanzt sich fort: Rectangle nutzt die GUI, die Math App nutzt Rectangle \u2013 also ist sogar die Math App betroffen, obwohl sie mit Grafik nichts zu tun hat.",
+      "good-false":"SRP: Rectangle macht nur Mathe (area). Die Grafik liegt in Graphical Rectangle (render), das von Rectangle erbt und die GUI nutzt. Die Math App nutzt nur das reine Rectangle. Klick auf \u201eGUI \u00e4ndern\u201c.",
+      "good-true":"Die GUI-\u00c4nderung trifft nur Graphical Rectangle und Graphical App. Rectangle nutzt die GUI nicht \u2013 die Math App bleibt verschont. Das ist die Dependency Firewall."
+    };
+    elNote.textContent = notes[mode+"-"+changed];
+
+    // App-Status mit echtem Beispiel: Rectangle(3, 4) -> area()=12, render() zeichnet
+    function cardWrap(el,state,inner){
+      var border = state==="ok"?"var(--text-success)":state==="err"?"var(--text-danger)":"var(--border-tertiary)";
+      var bg = state==="ok"?"var(--bg-success)":state==="err"?"var(--bg-danger)":"transparent";
+      el.setAttribute("style","flex:1 1 220px;border-radius:var(--r-lg);padding:12px 14px;border:1.5px solid "+border+";background:"+bg);
+      el.innerHTML=inner;
+    }
+    function chip(kind,text){
+      var c = kind==="ok"?["var(--bg-success)","var(--text-success)","\u2713"]:["var(--bg-danger)","var(--text-danger)","\u2717"];
+      return '<div style="display:inline-block;font-family:var(--font-mono);font-size:12.5px;padding:3px 10px;border-radius:var(--r-md);background:'+c[0]+';color:'+c[1]+'">'+c[2]+' '+text+'</div>';
+    }
+    function rectSVG(broken){
+      var st = broken ? 'fill:none;stroke:var(--text-danger);stroke-width:2;stroke-dasharray:5 3'
+                      : 'fill:var(--bg-info);stroke:var(--text-info);stroke-width:2';
+      return '<svg width="42" height="56" viewBox="0 0 42 56" style="flex:none"><rect x="3" y="3" width="36" height="50" rx="2" style="'+st+'"/></svg>';
+    }
+    var title=function(t){return '<div style="font-weight:600;font-size:14px;margin-bottom:2px">'+t+'</div>';};
+    var mono=function(t){return '<div style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);white-space:pre;margin:4px 0 8px">'+t+'</div>';};
+
+    // Math App: rein rechnerisch
+    var mathCode = mono("Rectangle r(3, 4);\ncout << r.area();");
+    if(!changed){
+      cardWrap(stMath,"neutral", title("Math App")+mathCode+chip("ok","Ausgabe: 12"));
+    } else if(mode==="bad"){
+      cardWrap(stMath,"err", title("Math App")+mathCode+chip("err","Build-Fehler: GUI.h ge\u00e4ndert \u2192 neu bauen")
+        +'<div style="font-size:11.5px;color:var(--text-danger);margin-top:6px">\u2026 obwohl area() reine Mathematik ist und keine Grafik braucht!</div>');
+    } else {
+      cardWrap(stMath,"ok", title("Math App")+mathCode+chip("ok","Ausgabe: 12")
+        +'<div style="font-size:11.5px;color:var(--text-success);margin-top:6px">\u2713 unber\u00fchrt \u2013 von der GUI entkoppelt</div>');
+    }
+
+    // Graphical App: zeichnet wirklich ein Rechteck (nutzt GUI -> bei \u00c4nderung erwartbar betroffen)
+    var graphCode = mono("r.render();");
+    var label = changed
+      ? '<span style="color:var(--text-danger);font-size:12px">render() bricht \u2013 GUI ge\u00e4ndert, neu bauen</span>'
+      : '<span style="color:var(--text-secondary);font-size:12px">Rechteck gezeichnet (3\u00d74)</span>';
+    var graphInner = title("Graphical App")+graphCode+'<div style="display:flex;align-items:center;gap:10px">'+rectSVG(changed)+label+'</div>';
+    cardWrap(stGraph, changed?"err":"neutral", graphInner);
+  }
+
+  bBad.onclick=function(){mode="bad";changed=false;render();};
+  bGood.onclick=function(){mode="good";changed=false;render();};
+  aChange.onclick=function(){changed=true;render();};
+  aReset.onclick=function(){changed=false;render();};
+  document.addEventListener("keydown",function(e){
+    if(e.key==="1"){mode="bad";changed=false;render();}
+    else if(e.key==="2"){mode="good";changed=false;render();}
+    else if(e.key==="Enter"){changed=true;render();}
+    else if(e.key==="Escape"){changed=false;render();}
+  });
+  render();
+})();
+</script>
+</body>
+</html>

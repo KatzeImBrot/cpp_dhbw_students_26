@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STL – selbst gebaut vs. Standardbibliothek</title>
+<style>
+  :root{
+    --bg-primary:#ffffff;--bg-secondary:#f4f3ee;--bg-info:#e6f1fb;--bg-danger:#fcebeb;--bg-success:#e1f5ee;--bg-warn:#fbf0d9;
+    --text-primary:#1f1e1c;--text-secondary:#5f5e5a;--text-tertiary:#8a8881;
+    --text-info:#185fa5;--text-danger:#a32d2d;--text-success:#0f6e56;--text-warn:#8a5a00;
+    --border-tertiary:rgba(0,0,0,0.14);--border-secondary:rgba(0,0,0,0.28);--border-info:#378add;
+    --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-mono:ui-monospace,"Cascadia Code",Consolas,"Liberation Mono",monospace;
+    --r-md:8px;--r-lg:12px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg-primary:#262624;--bg-secondary:#30302d;--bg-info:#0c447c;--bg-danger:#501313;--bg-success:#085041;--bg-warn:#4a3410;
+      --text-primary:#f0efe9;--text-secondary:#b4b2a9;--text-tertiary:#888780;
+      --text-info:#85b7eb;--text-danger:#f09595;--text-success:#5dcaa5;--text-warn:#e0b964;
+      --border-tertiary:rgba(255,255,255,0.16);--border-secondary:rgba(255,255,255,0.3);--border-info:#378add;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:960px;padding:24px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6}
+  h1{font-size:21px;font-weight:600;margin:0 0 4px}
+  .sub{color:var(--text-secondary);font-size:14px;margin:0 0 18px}
+  button{font-family:inherit;font-size:14px;padding:8px 16px;cursor:pointer;background:var(--bg-primary);color:var(--text-primary);border:0.5px solid var(--border-secondary);border-radius:var(--r-md);transition:background .12s,transform .06s}
+  button:hover{background:var(--bg-secondary)}
+  button:active{transform:scale(0.98)}
+  .code{font-family:var(--font-mono);font-size:12.5px;line-height:1.55;white-space:pre;overflow-x:auto;background:var(--bg-secondary);border-radius:var(--r-md);padding:12px 14px;margin:0}
+  .crit{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px}
+  .chip{font-size:11px;padding:2px 9px;border-radius:var(--r-md);flex:none;font-weight:600}
+</style>
+</head>
+<body>
+  <h1>STL &ndash; selbst gebaut vs. Standardbibliothek</h1>
+  <p class="sub">Aufgabe aus dem BankAccount-Beispiel: benutzte IBANs verwalten &ndash; hinzuf&uuml;gen und pr&uuml;fen, ob eine schon vergeben ist. Drei Wege im Vergleich. &nbsp;<span style="color:var(--text-tertiary)">(Tasten: 1&ndash;3)</span></p>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button id="s-manual">1 &middot; Selbst gebaut</button>
+    <button id="s-algo">2 &middot; STL-Algorithmen</button>
+    <button id="s-cont">3 &middot; STL-Container</button>
+  </div>
+
+  <div id="note" style="min-height:48px;font-size:14px;line-height:1.6;background:var(--bg-secondary);border-radius:var(--r-md);padding:10px 14px;margin-bottom:16px"></div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
+    <div style="flex:2 1 360px;min-width:0">
+      <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:6px">Code</div>
+      <pre id="code" class="code"></pre>
+    </div>
+    <div style="flex:1 1 230px;min-width:0">
+      <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:6px">Bewertung</div>
+      <div id="crit"></div>
+    </div>
+  </div>
+
+  <p style="font-size:11.5px;color:var(--text-tertiary);margin-top:16px">Zeiten gemessen mit <span style="font-family:var(--font-mono)">stl_benchmark.cpp</span> (2500 Werte, kompiliert mit -O2). Absolutwerte h&auml;ngen von der Maschine ab &ndash; es z&auml;hlt das Verh&auml;ltnis.</p>
+
+<script>
+(function(){
+  var data={
+    manual:{
+      note:"Klassischer Ansatz: eigene Sortierung (bubbleSort) und eigene Suche. Die bin\u00e4re Suche ist sogar schnell \u2013 aber fehleranf\u00e4llig (Off-by-one, OOB-Risiko), und bubbleSort macht das Einf\u00fcgen mit rund 1 Sekunde extrem langsam.",
+      code:"std::vector<int> used;\n\nvoid add(int iban) {\n    used.push_back(iban);\n    bubbleSort(used, 0, used.size());   // O(n\u00b2)\n}\n\nbool isUsed(int iban) {                 // eigene bin\u00e4re Suche\n    int low = 0, high = used.size();    // Off-by-one!\n    while (low <= high) {\n        int mid = (low + high) / 2;\n        if      (iban < used[mid]) high = mid - 1;\n        else if (iban > used[mid]) low  = mid + 1;\n        else return true;               // used[mid]: OOB-Risiko\n    }\n    return false;\n}",
+      crit:[
+        ["Code-Aufwand","bad","viel \u2013 eigene Sortierung & Suche"],
+        ["Korrektheit","bad","Bug: Off-by-one / OOB-Risiko"],
+        ["Einf\u00fcgen","bad","\u2248 1073 ms \u2013 bubbleSort O(n\u00b2)"],
+        ["Nachschlagen","ok","\u2248 13 ms \u2013 bin\u00e4re Suche O(log n)"]
+      ]
+    },
+    algo:{
+      note:"std::sort und std::find ersetzen die Handarbeit: korrekt und kurz. Aber Achtung \u2013 std::find sucht linear und ist damit beim Nachschlagen sogar langsamer als die handgeschriebene bin\u00e4re Suche. Mehr STL ist nicht automatisch schneller.",
+      code:"#include <algorithm>\nstd::vector<int> used;\n\nvoid add(int iban) {\n    used.push_back(iban);\n    std::sort(used.begin(), used.end());     // O(n log n)\n}\n\nbool isUsed(int iban) {\n    return std::find(used.begin(), used.end(),\n                     iban) != used.end();    // O(n)\n}",
+      crit:[
+        ["Code-Aufwand","warn","wenig \u2013 je eine Zeile"],
+        ["Korrektheit","ok","getestet & korrekt"],
+        ["Einf\u00fcgen","warn","\u2248 85 ms \u2013 std::sort O(n log n)"],
+        ["Nachschlagen","bad","\u2248 75 ms \u2013 std::find linear, langsamer als bin\u00e4re Suche!"]
+      ]
+    },
+    cont:{
+      note:"Der richtige Container gewinnt auf ganzer Linie: std::set f\u00fcgt in rund 0,3 ms ein (statt 1 Sekunde) und sucht in O(log n). std::unordered_set ist beim Suchen mit etwa 1 ms am schnellsten (O(1)). Kein eigenes Sortieren oder Suchen mehr.",
+      code:"#include <set>\nstd::set<int> used;          // immer sortiert & eindeutig\n\nvoid add(int iban) {\n    used.insert(iban);                  // O(log n)\n}\n\nbool isUsed(int iban) {\n    return used.count(iban) > 0;        // O(log n)\n}\n\n// std::unordered_set<int>  \u2192  O(1) im Schnitt",
+      crit:[
+        ["Code-Aufwand","ok","minimal \u2013 insert / count"],
+        ["Korrektheit","ok","automatisch eindeutig & sortiert"],
+        ["Einf\u00fcgen","ok","\u2248 0,3 ms \u2013 std::set O(log n)"],
+        ["Nachschlagen","ok","\u2248 14 ms \u2013 set; unordered_set \u2248 1 ms"]
+      ]
+    }
+  };
+  var seg="manual";
+  var elCode=document.getElementById("code"),elCrit=document.getElementById("crit"),elNote=document.getElementById("note");
+  var btns={manual:document.getElementById("s-manual"),algo:document.getElementById("s-algo"),cont:document.getElementById("s-cont")};
+  function active(on){return on?"border:2px solid var(--border-info);background:var(--bg-info);color:var(--text-info);":"";}
+  function chipCols(k){return k==="ok"?["var(--bg-success)","var(--text-success)","\u2713"]:k==="warn"?["var(--bg-warn)","var(--text-warn)","\u2248"]:["var(--bg-danger)","var(--text-danger)","\u2717"];}
+  function render(){
+    var d=data[seg];
+    for(var k in btns){btns[k].setAttribute("style",active(seg===k)+"font-size:14px;padding:8px 16px");}
+    elNote.textContent=d.note;
+    elCode.textContent=d.code;
+    var h="";
+    d.crit.forEach(function(row){
+      var c=chipCols(row[1]);
+      h+='<div class="crit"><span class="chip" style="background:'+c[0]+';color:'+c[1]+'">'+c[2]+'</span><div><div style="font-size:13px;font-weight:600">'+row[0]+'</div><div style="font-size:12px;color:var(--text-secondary)">'+row[2]+'</div></div></div>';
+    });
+    elCrit.innerHTML=h;
+  }
+  btns.manual.onclick=function(){seg="manual";render();};
+  btns.algo.onclick=function(){seg="algo";render();};
+  btns.cont.onclick=function(){seg="cont";render();};
+  document.addEventListener("keydown",function(e){
+    if(e.key==="1"){seg="manual";render();}
+    else if(e.key==="2"){seg="algo";render();}
+    else if(e.key==="3"){seg="cont";render();}
+  });
+  render();
+})();
+</script>
+</body>
+</html>
